@@ -1,0 +1,110 @@
+1.Import data and python packages 
+
+import numpy as np 
+import pandas as pd 
+import matplotlib.pyplot as plt 
+plt.rc("font", size=14)
+import seaborn as sns
+sns.set(style="white") #white background style for seaborn plots
+sns.set(style="whitegrid", color_codes=True)
+
+from sklearn import preprocessing
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.feature_selection import RFE
+from sklearn.feature_selection import RFECV
+from sklearn.metrics import accuracy_score, classification_report, precision_score, recall_score 
+from sklearn.metrics import confusion_matrix, precision_recall_curve, roc_curve, auc, log_loss
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import cross_validate
+
+import warnings
+warnings.filterwarnings("ignore")
+
+home = pd.read_csv("C:\\Users\T034848\Desktop\ProcessedHomeClaims.csv")
+home.head()
+
+
+np.all(np.isfinite(home))
+Out[34]:
+False
+
+np.all(np.isnan(home))
+Out[75]:
+False
+
+y = home.SUBRO_CREDITS
+x = home.drop('SUBRO_CREDITS', axis =1)
+x_train,x_test,y_train,y_test=train_test_split(x,y,test_size=0.2)
+x_train.head()
+x_train.shape
+
+x_test.head()
+x_test.shape
+
+
+2.Data Quality & Missing Value Assessment 
+
+x_train.isnull().sum()
+y_train.isnull().sum()
+
+3.Data Adjustment
+3.1 Missing values 
+3.2 Standardisation
+3.3 Dummy varibles
+
+4.1 Build a Logistic Regression Model 
+model = LogisticRegression()
+
+4.2 Feature ranking with recursive feature elimination and cross-validation
+RFECV performs RFE in a cross-validation loop to find the optimal number or the best number of features. 
+Hereafter a recursive feature elimination applied on logistic regression with automatic tuning of the number
+of features selected with cross-validation.
+
+#Create the RFE object and compute a cross-validated score.
+# The "accuracy" scoring is proportional to the number of correct classifications
+#rfecv = RFECV(estimator=LogisticRegression(), step=1, cv=10, scoring='accuracy')
+#rfecv.fit(x_train, y_train)
+#print("Optimal number of features: %d" % rfecv.n_features_)
+
+# Plot number of features VS. cross-validation scores
+#plt.figure(figsize=(10,6))
+#plt.xlabel("Number of features selected")
+#plt.ylabel("Cross validation score (nb of correct classifications)")
+#plt.plot(range(1, len(rfecv.grid_scores_) + 1), rfecv.grid_scores_)
+#plt.show()
+
+
+4.3 Model evaluation 
+
+4.3.1 simple train/test split using train_test_split() function
+x_train_ev, x_test_ev, y_train_ev, y_test_ev = train_test_split(x_train, y_train, test_size=0.2, random_state=2)
+# check classification scores of logistic regression
+logreg = LogisticRegression()
+logreg.fit(x_train_ev, y_train_ev)
+y_pred = logreg.predict(x_test_ev)
+#y_pred_proba = logreg.predict_proba(x_test_ev)[:, 1]
+#[fpr, tpr, thr] = roc_curve(y_test_ev, y_pred_proba)
+print('Train/Test split results:')
+print(logreg.__class__.__name__+" accuracy is %2.3f" % accuracy_score(y_test_ev, y_pred))
+#print(logreg.__class__.__name__+" log_loss is %2.3f" % log_loss(y_test_ev, y_pred_proba))
+#print(logreg.__class__.__name__+" auc is %2.3f" % auc(fpr, tpr))
+
+
+ValueError: Input contains NaN, infinity or a value too large for dtype('float64').
+
+
+4.3.2 K-fold cross-validation using cross_val_score() function
+# 10-fold cross-validation logistic regression
+logreg = LogisticRegression()
+# We are passing the entirety of X and y, not X_train or y_train, it takes care of splitting the data
+# cv=10 for 10 folds
+scores_accuracy = cross_val_score(logreg, x_train, y_train, cv=10, scoring='accuracy')
+#scores_log_loss = cross_val_score(logreg, x_train, y_train, cv=10, scoring='neg_log_loss')
+#scores_auc = cross_val_score(logreg, x_train, y_train, cv=10, scoring='roc_auc')
+print('K-fold cross-validation results:')
+print(logreg.__class__.__name__+" average accuracy is %2.3f" % scores_accuracy.mean())
+#print(logreg.__class__.__name__+" average log_loss is %2.3f" % -scores_log_loss.mean())
+#print(logreg.__class__.__name__+" average auc is %2.3f" % scores_auc.mean())
+
+ValueError: Input contains NaN, infinity or a value too large for dtype('float64').
